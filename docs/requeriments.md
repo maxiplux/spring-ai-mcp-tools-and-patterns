@@ -3,6 +3,7 @@
 ## Overview
 
 Create a complete Spring Boot 3.4 application with the following components:
+
 - Entity classes: Product, Category, and User with roles
 - Repositories for each entity
 - Service layer implementations
@@ -11,6 +12,7 @@ Create a complete Spring Boot 3.4 application with the following components:
 ## Entity Requirements
 
 ### Product Entity
+
 - ID (auto-generated)
 - Name
 - Description
@@ -21,6 +23,7 @@ Create a complete Spring Boot 3.4 application with the following components:
 - Relationship with Category (Many-to-One)
 
 ### Category Entity
+
 - ID (auto-generated)
 - Name
 - Description
@@ -29,6 +32,7 @@ Create a complete Spring Boot 3.4 application with the following components:
 - Relationship with Products (One-to-Many)
 
 ### User Entity
+
 - ID (auto-generated)
 - Username (unique)
 - Email (unique)
@@ -38,6 +42,7 @@ Create a complete Spring Boot 3.4 application with the following components:
 - User roles (USER, ADMIN)
 
 ## Repository Requirements
+
 - Create JpaRepository interfaces for each entity
 - Include custom query methods for common operations:
     - Find products by category
@@ -46,6 +51,7 @@ Create a complete Spring Boot 3.4 application with the following components:
     - Find categories by name (case insensitive)
 
 ## Service Layer Requirements
+
 - Create service interfaces and implementations for each entity
 - Implement CRUD operations
 - Add business logic for:
@@ -54,6 +60,7 @@ Create a complete Spring Boot 3.4 application with the following components:
     - Category management
 
 ## Controller Requirements
+
 - RESTful controllers for each entity with proper endpoints
 - Implement GET, POST, PUT, DELETE operations
 
@@ -61,6 +68,7 @@ Create a complete Spring Boot 3.4 application with the following components:
 - Implement proper error handling and response status codes
 
 ## Additional Notes
+
 - Use Java 17+ features where appropriate
 - Implement validation for all entities
 - Follow Spring Boot best practices for project structure
@@ -69,7 +77,9 @@ Create a complete Spring Boot 3.4 application with the following components:
 - Provide unit and integration tests
 
 ## Output Format
+
 Please generate the complete code structure including:
+
 1. Entity classes with annotations
 2. Repository interfaces with custom methods
 3. Service interfaces and implementations

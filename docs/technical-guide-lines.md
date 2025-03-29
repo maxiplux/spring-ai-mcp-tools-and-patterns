@@ -342,6 +342,7 @@ public class ProductService {
 - **Gradle**: Chosen for flexibility and performance in managing dependencies and build tasks
 - **Spring Boot Starters**: Simplifies dependency management with pre-configured sets
 - **JUnit**: Used for unit testing to ensure code quality and reliability
+- **@MockBean was deprecated, Always work in that case with  @MockitoBean
 - **Mockito**: Facilitates mocking in tests to isolate components
 
 ### Design Patterns

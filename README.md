@@ -1,6 +1,7 @@
 # Spring AI MCP Catalog API
 
-This project is a Spring Boot application that demonstrates the integration of Spring AI with a catalog management system.
+This project is a Spring Boot application that demonstrates the integration of Spring AI with a catalog management
+system.
 
 ## Features
 
@@ -59,6 +60,7 @@ http://localhost:8080/h2-console
 ```
 
 Use the following credentials:
+
 - JDBC URL: `jdbc:h2:mem:testdb`
 - Username: `sa`
 - Password: (leave empty)
@@ -70,8 +72,8 @@ On startup, the application loads some sample data:
 - Categories: Electronics, Clothing, Books
 - Products: Several products in each category
 - Users:
-  - Admin: username: `admin`, password: `admin123`
-  - Regular user: username: `user`, password: `user123`
+    - Admin: username: `admin`, password: `admin123`
+    - Regular user: username: `user`, password: `user123`
 
 ## API Endpoints
 
