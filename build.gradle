@@ -46,8 +46,7 @@ dependencies {
     // https://mvnrepository.com/artifact/io.swagger.core.v3/swagger-annotations-jakarta
     implementation 'io.swagger.core.v3:swagger-annotations-jakarta:2.2.28'
     implementation 'io.swagger.core.v3:swagger-core:2.2.28'
-
-    implementation 'javax.xml.bind:jaxb-api:2.3.1'
+    implementation 'jakarta.xml.bind:jakarta.xml.bind-api:4.0.0'
 }
 
 dependencyManagement {

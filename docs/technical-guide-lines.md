@@ -1,86 +1,1526 @@
-# B2B Commerce Project Guide
+#Technical Project Guidelines
 
 ## Build/Test Commands
 
-- Build project: `./gradlew build`
-- Run tests: `./gradlew test`
-- Single test: `./gradlew test --tests "app.quantun.b2b.TestClassName.testMethodName"`
-- Skip tests: `./gradlew build -x test`
-- Run app: `./gradlew bootRun`
-- Docker build: `docker build -t b2bcommerce .` or `docker-compose up -d`
+```bash
+# Build project
+./gradlew build
+
+# Run tests
+./gradlew test
+
+# Run a single test
+./gradlew test --tests "app.quantun.b2b.TestClassName.testMethodName"
+
+# Skip tests
+./gradlew build -x test
+
+# Run application
+./gradlew bootRun
+
+# Docker build
+docker build -t b2bcommerce .
+# or
+docker-compose up -d
+```
+
+## Project Workflow
+
+When you finish a task, document all your decisions in the README.md file, explaining:
+- Why you made each decision
+- What impact these decisions have on the project
+
+Additionally, create a summary of each significant decision in the `logbook` folder with:
+- Timestamp of the decision
+- Problem being addressed
+- Options considered
+- Decision made and reasoning
+- Expected outcomes
+
+### Logbook Structure
+
+Each decision summary should be stored in the `logbook` folder with the following naming convention:
+```
+YYYY-MM-DD_decision-short-name.md
+```
+
+Example of a decision summary:
+
+```markdown
+# Decision: Implement Repository Caching
+
+## Date
+2025-03-29
+
+## Problem
+The system was experiencing slow response times for frequently accessed product data.
+
+## Options Considered
+1. **Application-level caching**: Using Spring Cache with Redis
+2. **Database query optimization**: Adding indexes and optimizing queries
+3. **Content Delivery Network**: Offloading static content to a CDN
+
+## Decision
+Implemented application-level caching using Spring Cache with Redis for frequently accessed product data.
+
+## Reasoning
+- Application-level caching provides immediate performance benefits
+- Redis offers persistence options to prevent data loss
+- Implementation complexity is lower than restructuring the database
+- Expected 70% reduction in database reads for product catalog pages
+
+## Expected Outcomes
+- Reduced API response time from 300ms to <50ms for catalog pages
+- Decreased database load during peak hours
+- Improved user experience with faster page loads
+- Potential cost reduction by requiring fewer database resources
+
+## Implementation Details
+- Added Redis configuration in application.properties
+- Implemented @Cacheable, @CachePut, and @CacheEvict annotations on service methods
+- Added cache eviction on product updates to maintain data consistency
+```
 
 ## Code Style Guidelines
 
+### Technology Requirements
 - Java 17, Spring Boot 3.4.x
-- We are always working with application.properties
-- All exeptions must follow the specification problemdetails
-- You cannot return in controller methods List<*> All needs to be a Page<*> of PagingAndSortingRepository
-- You need to work with DTOs and Mappers, never with entities in controllers directly
-- There are two types of DTOs: Request and Response
-- When you are writting controllers and they are restcontrollers you need add doccumentation with OpenAPI(springdoc-openapi)
-- Request DTOs are used for creating or updating entities, while Response DTOs are used for returning data to the client.
-- Use ModelMapper for mapping between DTOs and entities.
-- Use @Valid for validating request DTOs.
-- Use @Validated for validating service methods.
-- Use @Transactional for service methods that modify data.
-- Use @Cacheable for caching service methods that return data.
-- Use @CacheEvict for evicting cache entries when data is modified.
-- Use @CachePut for updating cache entries when data is modified.
-- 
-- You need to work always with @RequiredArgsConstructor to inject dependencies
-- All repositories must have CrudRepository and PagingAndSortingRepository
-- Max line length: 120 characters
-- Indentation: 4 spaces, no tabs
-- Naming: camelCase for variables/methods, PascalCase for classes, UPPER_SNAKE_CASE for constants
-- Use Jakarta EE (jakarta.*) not legacy javax.* imports
-- No wildcard imports or unused imports
-- Follow existing patterns for entity classes, services, controllers
-- Use JPA annotations consistently (@Entity, @Column, etc.)
-- Error handling: Use custom exceptions or ProblemDetail for standardized error responses
+- Use `application.properties` for configuration
+- Follow ProblemDetail specification for all exceptions
+
+### Architecture Patterns
+- Controllers must return `Page<*>` from PagingAndSortingRepository, not `List<*>`
+- Always use DTOs and Mappers, never expose entities directly in controllers
+- Maintain two types of DTOs: Request (for creating/updating) and Response (for returning data)
+- Document RestControllers with OpenAPI (springdoc-openapi)
+
+Example of a properly structured controller:
+
+```java
+@RestController
+@RequestMapping("/api/products")
+@Tag(name = "Product Controller", description = "API for product management")
+@RequiredArgsConstructor
+public class ProductController {
+    
+    private final ProductService productService;
+    
+    @GetMapping
+    @Operation(summary = "Get all products", description = "Returns a paginated list of products")
+    public Page<ProductResponseDTO> getAllProducts(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "id") String sortBy) {
+        
+        return productService.findAll(PageRequest.of(page, size, Sort.by(sortBy)));
+    }
+    
+    @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
+    @Operation(summary = "Create a product", description = "Creates a new product")
+    public ProductResponseDTO createProduct(@Valid @RequestBody ProductRequestDTO productDTO) {
+        return productService.save(productDTO);
+    }
+}
+
+### Dependency Injection & Data Access
+- Use `@RequiredArgsConstructor` for dependency injection
+- All repositories must extend both CrudRepository and PagingAndSortingRepository
+
+### Code Organization
+- Maximum line length: 120 characters
+- Indentation: 4 spaces (no tabs)
+- Naming conventions:
+  - camelCase for variables/methods
+  - PascalCase for classes
+  - UPPER_SNAKE_CASE for constants
+- Use Jakarta EE (`jakarta.*`) imports, not legacy `javax.*`
+- Avoid wildcard imports and remove unused imports
 - Organize imports alphabetically
-- Entity classes should include proper equals/hashCode using entity ID
+
+### Entity and Service Patterns
+- Follow existing patterns for entity classes, services, and controllers
+- Use JPA annotations consistently (`@Entity`, `@Column`, etc.)
+- Implement proper equals/hashCode in entity classes using entity ID
 - Document public methods with Javadoc
-- Use Lombok annotations consistently (@Getter, @Setter, etc.)
+- Use Lombok annotations consistently (`@Getter`, `@Setter`, etc.)
+
+Example of a properly structured entity:
+
+```java
+@Entity
+@Table(name = "products")
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class Product {
+    
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+    
+    @Column(name = "name", nullable = false, length = 100)
+    private String name;
+    
+    @Column(name = "description", length = 500)
+    private String description;
+    
+    @Column(name = "price", nullable = false)
+    private BigDecimal price;
+    
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "category_id")
+    private Category category;
+    
+    @Column(name = "created_at", nullable = false, updatable = false)
+    @CreationTimestamp
+    private LocalDateTime createdAt;
+    
+    @Column(name = "updated_at")
+    @UpdateTimestamp
+    private LocalDateTime updatedAt;
+    
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Product product = (Product) o;
+        return id != null && id.equals(product.id);
+    }
+    
+    @Override
+    public int hashCode() {
+        return getClass().hashCode();
+    }
+}
+
+### API Design
+- Use `@Valid` for validating request DTOs
+- Use `@Validated` for validating service methods
+- Use ModelMapper for mapping between DTOs and entities
+
+Example of DTOs with validation:
+
+```java
+// Request DTO
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class ProductRequestDTO {
+    
+    @NotBlank(message = "Product name is required")
+    @Size(min = 3, max = 100, message = "Product name must be between 3 and 100 characters")
+    private String name;
+    
+    @Size(max = 500, message = "Description cannot exceed 500 characters")
+    private String description;
+    
+    @NotNull(message = "Price is required")
+    @Positive(message = "Price must be positive")
+    private BigDecimal price;
+    
+    @NotNull(message = "Category is required")
+    private Long categoryId;
+}
+
+// Response DTO
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class ProductResponseDTO {
+    private Long id;
+    private String name;
+    private String description;
+    private BigDecimal price;
+    private CategoryResponseDTO category;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
+}
+
+### Transaction and Cache Management
+- Use `@Transactional` for service methods that modify data
+- Use `@Cacheable` for caching service methods that return data
+- Use `@CacheEvict` for evicting cache entries when data is modified
+- Use `@CachePut` for updating cache entries when data is modified
+
+Example of a service class with transaction and cache management:
+
+```java
+@Service
+@RequiredArgsConstructor
+@Validated
+@Slf4j
+public class ProductService {
+    
+    private final ProductRepository productRepository;
+    private final CategoryRepository categoryRepository;
+    private final ModelMapper modelMapper;
+    
+    @Cacheable(value = "products", key = "#pageable.pageNumber + '_' + #pageable.pageSize + '_' + #pageable.sort")
+    public Page<ProductResponseDTO> findAll(Pageable pageable) {
+        log.info("Finding all products with pagination: {}", pageable);
+        return productRepository.findAll(pageable)
+                .map(product -> modelMapper.map(product, ProductResponseDTO.class));
+    }
+    
+    @Cacheable(value = "products", key = "#id")
+    public ProductResponseDTO findById(Long id) {
+        log.info("Finding product by ID: {}", id);
+        return productRepository.findById(id)
+                .map(product -> modelMapper.map(product, ProductResponseDTO.class))
+                .orElseThrow(() -> new ResourceNotFoundException("Product not found with id: " + id));
+    }
+    
+    @Transactional
+    @CacheEvict(value = "products", allEntries = true)
+    public ProductResponseDTO save(ProductRequestDTO productDTO) {
+        log.info("Saving new product: {}", productDTO.getName());
+        
+        Category category = categoryRepository.findById(productDTO.getCategoryId())
+                .orElseThrow(() -> new ResourceNotFoundException("Category not found"));
+        
+        Product product = modelMapper.map(productDTO, Product.class);
+        product.setCategory(category);
+        
+        Product savedProduct = productRepository.save(product);
+        return modelMapper.map(savedProduct, ProductResponseDTO.class);
+    }
+    
+    @Transactional
+    @CachePut(value = "products", key = "#id")
+    @CacheEvict(value = "products", allEntries = true)
+    public ProductResponseDTO update(Long id, ProductRequestDTO productDTO) {
+        log.info("Updating product with ID: {}", id);
+        
+        Product product = productRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Product not found"));
+        
+        Category category = categoryRepository.findById(productDTO.getCategoryId())
+                .orElseThrow(() -> new ResourceNotFoundException("Category not found"));
+        
+        modelMapper.map(productDTO, product);
+        product.setCategory(category);
+        
+        Product updatedProduct = productRepository.save(product);
+        return modelMapper.map(updatedProduct, ProductResponseDTO.class);
+    }
+    
+    @Transactional
+    @CacheEvict(value = "products", allEntries = true)
+    public void delete(Long id) {
+        log.info("Deleting product with ID: {}", id);
+        
+        Product product = productRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Product not found"));
+        
+        productRepository.delete(product);
+    }
+}
 
 ## Technical Decisions
 
 ### Technology Stack
-
-- **Java 17**: Chosen for its long-term support and modern language features.
-- **Spring Boot 3.4.x**: Provides a comprehensive framework for building enterprise applications with minimal configuration.
-- **Hibernate**: Used for ORM to simplify database interactions.
-- **Liquibase**: Manages database schema changes in a controlled manner.
-- **Docker**: Containerizes the application for consistent deployment across environments.
-
-
+- **Java 17**: Chosen for its long-term support and modern language features
+- **Spring Boot 3.4.x**: Provides a comprehensive framework with minimal configuration
+- **Hibernate**: Used for ORM to simplify database interactions
+- **Liquibase**: Manages database schema changes in a controlled manner
+- **Docker**: Containerizes the application for consistent deployment
 
 ### Configuration Choices
-
-- **application.properties**: Centralized configuration file for managing application settings.
-- **ModelMapper**: Simplifies object mapping between DTOs and entities.
-- **OpenAPI**: Generates API documentation for better developer experience.
-- **GlobalExceptionHandler**: Standardizes error handling across the application.
+- **application.properties**: Centralized configuration for managing application settings
+- **ModelMapper**: Simplifies object mapping between DTOs and entities
+- **OpenAPI**: Generates API documentation for better developer experience
+- **GlobalExceptionHandler**: Standardizes error handling across the application
 
 ### Dependency Management
-
-- **Gradle**: Chosen for its flexibility and performance in managing project dependencies and build tasks.
-- **Spring Boot Starters**: Simplifies dependency management by providing pre-configured sets of dependencies for common use cases.
-- **JUnit**: Used for unit testing to ensure code quality and reliability.
-- **Mockito**: Facilitates mocking in tests to isolate components and test behavior.
-human-readable format.
+- **Gradle**: Chosen for flexibility and performance in managing dependencies and build tasks
+- **Spring Boot Starters**: Simplifies dependency management with pre-configured sets
+- **JUnit**: Used for unit testing to ensure code quality and reliability
+- **Mockito**: Facilitates mocking in tests to isolate components
 
 ### Design Patterns
-
-- **Singleton**: Ensures a single instance of certain classes, such as configuration classes.
-- **Factory**: Used to create instances of complex objects, such as AWS clients.
-- **Builder**: Simplifies the creation of complex objects, such as entities with many fields.
-- **Strategy**: Encapsulates algorithms, such as different authentication strategies, to make them interchangeable.
+- **Singleton**: Ensures a single instance of certain classes (e.g., configuration)
+- **Factory**: Used to create instances of complex objects (e.g., AWS clients)
+- **Builder**: Simplifies creation of complex objects with many fields
+- **Strategy**: Encapsulates interchangeable algorithms (e.g., authentication strategies)
 
 ### Best Practices
+- **Code Reviews**: Regular reviews to maintain quality and share knowledge
+- **Continuous Integration**: Automated builds and tests to catch issues early
+- **Documentation**: Comprehensive documentation for maintainability
 
-- **Code Reviews**: Regular code reviews to maintain code quality and share knowledge among team members.
-- **Continuous Integration**: Automated builds and tests to catch issues early in the development process.
-- **Documentation**: Comprehensive documentation to ensure that the codebase is understandable and maintainable.
-- **Security**: Regular security audits and updates to protect against vulnerabilities.
-### Summary
-- When you finish a task you need to write all your decisions in the README.md explaining why you made this decision and what is the impact of this decision in the project.
+## Code Quality and Static Analysis
+
+### Checkstyle Configuration
+
+The project uses Google Checkstyle to enforce code quality and consistency. The Checkstyle configuration enforces the following rules:
+
+#### General Rules
+- UTF-8 character encoding
+- Maximum line length: 120 characters
+- Maximum file length: 500 lines
+- No tab characters (use spaces)
+- New line required at end of file
+
+#### Documentation Rules
+- Javadoc required for methods, types, and variables
+- Proper Javadoc style must be maintained
+
+#### Naming Conventions
+- Constants: `UPPER_SNAKE_CASE`
+- Local variables: `camelCase`
+- Member variables: `camelCase`
+- Method names: `camelCase`
+- Package names: lowercase, dot-separated
+- Parameters: `camelCase` format (starting with lowercase letter)
+- Type names: `PascalCase`
+
+#### Import Rules
+- No wildcard imports (`import package.*`)
+- No illegal imports
+- No redundant imports
+- No unused imports
+
+#### Size and Complexity Limits
+- Method length: maximum 50 lines
+- Parameter number: reasonable limits enforced
+
+#### Whitespace Rules
+- Consistent spacing around operators
+- Proper indentation (4 spaces)
+- Proper line wrapping (8-space indentation)
+- No whitespace after certain tokens
+- Required whitespace in specific locations
+
+#### Code Block Rules
+- Avoid nested blocks
+- No empty blocks
+- Brace placement (left brace at end of line)
+- Braces required for all control statements
+
+#### Common Coding Practices
+- No empty statements
+- Equals and hashCode must be implemented together
+- No inner assignments
+- No magic numbers (use constants)
+- No missing switch default case
+- No multiple variable declarations in one statement
+- Simplify boolean expressions and returns
+
+#### Class Design
+- Design for extension
+- Final classes when appropriate
+- Hide utility class constructors
+- Interface should define types
+- Proper visibility modifiers
+
+#### Member Ordering
+- Static members before instance members
+
+#### Gradle Integration
+
+Add the following to your `build.gradle` file:
+
+```groovy
+plugins {
+    id 'checkstyle'
+}
+
+checkstyle {
+    toolVersion = '10.3.3'
+    configFile = file("${rootDir}/config/checkstyle/checkstyle.xml")
+    maxWarnings = 0
+}
+
+tasks.withType(Checkstyle) {
+    reports {
+        xml.required = false
+        html.required = true
+    }
+}
+```
+
+Place the checkstyle.xml configuration file in `config/checkstyle/checkstyle.xml`.
+
+Run Checkstyle with:
+
+```bash
+./gradlew checkstyleMain checkstyleTest
+```
+
+
+## Testing Guidelines
+
+### General Testing Principles
+- Services and controllers must have unit tests with ≥80% code coverage
+- Follow AAA pattern (Arrange, Act, Assert) for structuring tests
+- Tests should be independent and isolated
+- One assertion per test method when possible
+- Use descriptive test method names: `should_ExpectedBehavior_WhenStateUnderTest`
+- Test all critical paths including error handling
+- Test boundary conditions and edge cases
+- Use in-memory databases for repository tests
+- Use test data factories for complex object creation
+
+Example of a well-structured test following AAA pattern:
+
+```java
+@ExtendWith(MockitoExtension.class)
+class ProductServiceTest {
+
+    @Mock
+    private ProductRepository productRepository;
+    
+    @Mock
+    private CategoryRepository categoryRepository;
+    
+    @Mock
+    private ModelMapper modelMapper;
+    
+    @InjectMocks
+    private ProductService productService;
+    
+    private Product product;
+    private ProductRequestDTO requestDTO;
+    private ProductResponseDTO responseDTO;
+    private Category category;
+    
+    @BeforeEach
+    void setUp() {
+        // Set up test data
+        category = Category.builder().id(1L).name("Electronics").build();
+        
+        product = Product.builder()
+                .id(1L)
+                .name("Test Product")
+                .description("Test Description")
+                .price(new BigDecimal("99.99"))
+                .category(category)
+                .build();
+        
+        requestDTO = ProductRequestDTO.builder()
+                .name("Test Product")
+                .description("Test Description")
+                .price(new BigDecimal("99.99"))
+                .categoryId(1L)
+                .build();
+        
+        responseDTO = ProductResponseDTO.builder()
+                .id(1L)
+                .name("Test Product")
+                .description("Test Description")
+                .price(new BigDecimal("99.99"))
+                .category(new CategoryResponseDTO(1L, "Electronics"))
+                .build();
+    }
+    
+    @Test
+    void should_ReturnProductResponseDTO_WhenFindById() {
+        // Arrange
+        when(productRepository.findById(1L)).thenReturn(Optional.of(product));
+        when(modelMapper.map(product, ProductResponseDTO.class)).thenReturn(responseDTO);
+        
+        // Act
+        ProductResponseDTO result = productService.findById(1L);
+        
+        // Assert
+        assertNotNull(result);
+        assertEquals(1L, result.getId());
+        assertEquals("Test Product", result.getName());
+        verify(productRepository).findById(1L);
+        verify(modelMapper).map(product, ProductResponseDTO.class);
+    }
+    
+    @Test
+    void should_ThrowResourceNotFoundException_WhenProductNotFound() {
+        // Arrange
+        when(productRepository.findById(99L)).thenReturn(Optional.empty());
+        
+        // Act & Assert
+        assertThrows(ResourceNotFoundException.class, () -> {
+            productService.findById(99L);
+        });
+        
+        verify(productRepository).findById(99L);
+        verifyNoInteractions(modelMapper);
+    }
+}
+
+### Controller Testing
+
+#### General Guidelines
+- Test all endpoints defined in controllers
+- Verify correct HTTP status codes are returned
+- Verify response body structure and content
+- Test validation errors when invalid input is provided
+- Test pagination and sorting functionality
+- Verify proper error responses for exceptional cases
+- Use MockMvc for simulating HTTP requests
+- Mock service layer dependencies
+- Test documentation annotations if using OpenAPI/Swagger
+
+Example of a controller test:
+
+```java
+@ExtendWith(SpringExtension.class)
+@WebMvcTest(ProductController.class)
+class ProductControllerTest {
+
+    @Autowired
+    private MockMvc mockMvc;
+    
+    @MockBean
+    private ProductService productService;
+    
+    @Autowired
+    private ObjectMapper objectMapper;
+    
+    private ProductRequestDTO validRequestDTO;
+    private ProductResponseDTO responseDTO;
+    
+    @BeforeEach
+    void setUp() {
+        validRequestDTO = ProductRequestDTO.builder()
+                .name("Test Product")
+                .description("Test Description")
+                .price(new BigDecimal("99.99"))
+                .categoryId(1L)
+                .build();
+        
+        responseDTO = ProductResponseDTO.builder()
+                .id(1L)
+                .name("Test Product")
+                .description("Test Description")
+                .price(new BigDecimal("99.99"))
+                .category(new CategoryResponseDTO(1L, "Electronics"))
+                .createdAt(LocalDateTime.now())
+                .updatedAt(LocalDateTime.now())
+                .build();
+    }
+    
+    @Test
+    void should_ReturnCreatedStatus_WhenValidProductIsCreated() throws Exception {
+        // Arrange
+        when(productService.save(any(ProductRequestDTO.class))).thenReturn(responseDTO);
+        
+        // Act & Assert
+        mockMvc.perform(post("/api/products")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(validRequestDTO)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.id").value(1L))
+                .andExpect(jsonPath("$.name").value("Test Product"))
+                .andExpect(jsonPath("$.price").value(99.99))
+                .andDo(print());
+        
+        verify(productService).save(any(ProductRequestDTO.class));
+    }
+    
+    @Test
+    void should_ReturnBadRequest_WhenInvalidProductIsCreated() throws Exception {
+        // Arrange
+        ProductRequestDTO invalidRequest = ProductRequestDTO.builder()
+                .name("")  // Invalid: empty name
+                .price(new BigDecimal("-10.00"))  // Invalid: negative price
+                .build();  // Missing required categoryId
+        
+        // Act & Assert
+        mockMvc.perform(post("/api/products")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(invalidRequest)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.type").value("about:blank"))
+                .andExpect(jsonPath("$.title").value("Bad Request"))
+                .andExpect(jsonPath("$.status").value(400))
+                .andExpect(jsonPath("$.detail").exists())
+                .andDo(print());
+        
+        verifyNoInteractions(productService);
+    }
+}
+
+#### Best Practices
+- Group tests by HTTP method (GET, POST, PUT, DELETE)
+- Test both successful and failure scenarios
+- Verify content type and headers in responses
+- Test authorization if applicable
+- Validate correct DTO mappings
+- Test query parameter processing
+
+### Service Testing
+
+#### General Guidelines
+- Mock all dependencies using Mockito
+- Test business logic thoroughly
+- Verify interactions with repositories
+- Test exception handling and error scenarios
+- Test caching behavior where applicable
+- Test transactional behavior
+- Verify proper mapping between entities and DTOs
+
+#### Best Practices
+- Test service method contracts
+- Verify all business rules are enforced
+- Test edge cases and boundary conditions
+- Mock external service calls
+- Test that appropriate exceptions are thrown
+- Verify that service methods respect transaction boundaries
+
+### Repository Testing
+- Use `@DataJpaTest` for repository tests
+- Test custom finder methods
+- Verify query results are correct
+- Test sorting and pagination
+- Test custom JPQL/HQL queries
+- Use TestEntityManager for test data setup
+- Clean up test data after tests
+
+Example of a repository test:
+
+```java
+@DataJpaTest
+class ProductRepositoryTest {
+
+    @Autowired
+    private TestEntityManager entityManager;
+    
+    @Autowired
+    private ProductRepository productRepository;
+    
+    private Category electronicsCategory;
+    private Category clothingCategory;
+    
+    @BeforeEach
+    void setUp() {
+        // Prepare test data
+        electronicsCategory = Category.builder().name("Electronics").build();
+        clothingCategory = Category.builder().name("Clothing").build();
+        
+        // Persist categories
+        electronicsCategory = entityManager.persistAndFlush(electronicsCategory);
+        clothingCategory = entityManager.persistAndFlush(clothingCategory);
+        
+        // Persist sample products
+        entityManager.persistAndFlush(Product.builder()
+                .name("Laptop")
+                .description("High-performance laptop")
+                .price(new BigDecimal("1299.99"))
+                .category(electronicsCategory)
+                .build());
+        
+        entityManager.persistAndFlush(Product.builder()
+                .name("Smartphone")
+                .description("Latest smartphone model")
+                .price(new BigDecimal("899.99"))
+                .category(electronicsCategory)
+                .build());
+        
+        entityManager.persistAndFlush(Product.builder()
+                .name("T-Shirt")
+                .description("Cotton t-shirt")
+                .price(new BigDecimal("19.99"))
+                .category(clothingCategory)
+                .build());
+        
+        entityManager.clear();
+    }
+    
+    @Test
+    void should_FindProductsByCategory() {
+        // Act
+        List<Product> electronicsProducts = productRepository.findByCategory(electronicsCategory);
+        List<Product> clothingProducts = productRepository.findByCategory(clothingCategory);
+        
+        // Assert
+        assertThat(electronicsProducts).hasSize(2);
+        assertThat(clothingProducts).hasSize(1);
+        
+        assertThat(electronicsProducts).extracting(Product::getName)
+                .containsExactlyInAnyOrder("Laptop", "Smartphone");
+        
+        assertThat(clothingProducts).extracting(Product::getName)
+                .containsExactly("T-Shirt");
+    }
+    
+    @Test
+    void should_FindProductsByPriceRange() {
+        // Act
+        List<Product> expensiveProducts = productRepository.findByPriceBetween(
+                new BigDecimal("500.00"), new BigDecimal("2000.00"));
+        
+        List<Product> affordableProducts = productRepository.findByPriceBetween(
+                new BigDecimal("10.00"), new BigDecimal("100.00"));
+        
+        // Assert
+        assertThat(expensiveProducts).hasSize(2);
+        assertThat(affordableProducts).hasSize(1);
+        
+        assertThat(expensiveProducts).extracting(Product::getName)
+                .containsExactlyInAnyOrder("Laptop", "Smartphone");
+        
+        assertThat(affordableProducts).extracting(Product::getName)
+                .containsExactly("T-Shirt");
+    }
+    
+    @Test
+    void should_PaginateAndSortProducts() {
+        // Act
+        Page<Product> firstPage = productRepository.findAll(
+                PageRequest.of(0, 2, Sort.by(Sort.Direction.DESC, "price")));
+        
+        Page<Product> secondPage = productRepository.findAll(
+                PageRequest.of(1, 2, Sort.by(Sort.Direction.DESC, "price")));
+        
+        // Assert
+        assertThat(firstPage.getContent()).hasSize(2);
+        assertThat(secondPage.getContent()).hasSize(1);
+        
+        assertThat(firstPage.getContent()).extracting(Product::getName)
+                .containsExactly("Laptop", "Smartphone");
+        
+        assertThat(secondPage.getContent()).extracting(Product::getName)
+                .containsExactly("T-Shirt");
+        
+        assertThat(firstPage.getTotalElements()).isEqualTo(3);
+        assertThat(firstPage.getTotalPages()).isEqualTo(2);
+    }
+}
+
+### Integration Testing
+- Test end-to-end flows across multiple layers
+- Use `@SpringBootTest` for integration tests
+- Use real database or in-memory H2 with appropriate schema
+- Test API contracts
+- Verify proper serialization/deserialization
+- Test actual HTTP responses via TestRestTemplate
+
+Example of an integration test:
+
+```java
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@ActiveProfiles("test")
+@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
+class ProductIntegrationTest {
+
+    @Autowired
+    private TestRestTemplate restTemplate;
+    
+    @Autowired
+    private ProductRepository productRepository;
+    
+    @Autowired
+    private CategoryRepository categoryRepository;
+    
+    private Category category;
+    private ProductRequestDTO requestDTO;
+    private static Long createdProductId;
+    
+    @BeforeEach
+    void setUp() {
+        if (categoryRepository.count() == 0) {
+            category = categoryRepository.save(Category.builder().name("Test Category").build());
+        } else {
+            category = categoryRepository.findAll().iterator().next();
+        }
+        
+        requestDTO = ProductRequestDTO.builder()
+                .name("Integration Test Product")
+                .description("Product created in integration test")
+                .price(new BigDecimal("49.99"))
+                .categoryId(category.getId())
+                .build();
+    }
+    
+    @Test
+    @Order(1)
+    void should_CreateProduct_ThenRetrieveIt() {
+        // Create product
+        ResponseEntity<ProductResponseDTO> createResponse = restTemplate.postForEntity(
+                "/api/products",
+                requestDTO,
+                ProductResponseDTO.class
+        );
+        
+        // Verify creation was successful
+        assertEquals(HttpStatus.CREATED, createResponse.getStatusCode());
+        assertNotNull(createResponse.getBody());
+        assertEquals(requestDTO.getName(), createResponse.getBody().getName());
+        assertEquals(requestDTO.getDescription(), createResponse.getBody().getDescription());
+        assertEquals(0, requestDTO.getPrice().compareTo(createResponse.getBody().getPrice()));
+        
+        // Save ID for subsequent tests
+        createdProductId = createResponse.getBody().getId();
+        
+        // Retrieve product
+        ResponseEntity<ProductResponseDTO> getResponse = restTemplate.getForEntity(
+                "/api/products/{id}",
+                ProductResponseDTO.class,
+                createdProductId
+        );
+        
+        // Verify retrieval was successful
+        assertEquals(HttpStatus.OK, getResponse.getStatusCode());
+        assertNotNull(getResponse.getBody());
+        assertEquals(createdProductId, getResponse.getBody().getId());
+        assertEquals(requestDTO.getName(), getResponse.getBody().getName());
+    }
+    
+    @Test
+    @Order(2)
+    void should_UpdateProduct() {
+        // Update product
+        requestDTO.setName("Updated Product Name");
+        requestDTO.setPrice(new BigDecimal("59.99"));
+        
+        restTemplate.put(
+                "/api/products/{id}",
+                requestDTO,
+                createdProductId
+        );
+        
+        // Retrieve updated product
+        ResponseEntity<ProductResponseDTO> getResponse = restTemplate.getForEntity(
+                "/api/products/{id}",
+                ProductResponseDTO.class,
+                createdProductId
+        );
+        
+        // Verify update was successful
+        assertEquals(HttpStatus.OK, getResponse.getStatusCode());
+        assertNotNull(getResponse.getBody());
+        assertEquals("Updated Product Name", getResponse.getBody().getName());
+        assertEquals(0, new BigDecimal("59.99").compareTo(getResponse.getBody().getPrice()));
+    }
+    
+    @Test
+    @Order(3)
+    void should_DeleteProduct() {
+        // Delete product
+        restTemplate.delete(
+                "/api/products/{id}",
+                createdProductId
+        );
+        
+        // Try to retrieve deleted product
+        ResponseEntity<ProductResponseDTO> getResponse = restTemplate.getForEntity(
+                "/api/products/{id}",
+                ProductResponseDTO.class,
+                createdProductId
+        );
+        
+        // Verify product was deleted
+        assertEquals(HttpStatus.NOT_FOUND, getResponse.getStatusCode());
+    }
+}
+
+### Test Configuration
+- Use separate `application-test.properties` file
+- Configure test-specific properties
+- Disable certain features in tests (caching, external services)
+- Use appropriate profiles for testing
+
+Example of a test configuration file:
+
+```properties
+# application-test.properties
+
+# Database configuration
+spring.datasource.url=jdbc:h2:mem:testdb
+spring.datasource.driver-class-name=org.h2.Driver
+spring.datasource.username=sa
+spring.datasource.password=password
+spring.jpa.database-platform=org.hibernate.dialect.H2Dialect
+spring.jpa.hibernate.ddl-auto=create-drop
+
+# Disable caching for tests
+spring.cache.type=none
+
+# Disable external services
+app.external-service.enabled=false
+
+# Configure logging for tests
+logging.level.org.hibernate.SQL=DEBUG
+logging.level.org.hibernate.type.descriptor.sql.BasicBinder=TRACE
+logging.level.app.quantun.b2b=DEBUG
+
+# Disable scheduled tasks
+app.scheduling.enabled=false
+
+# Specific test settings
+app.test.timeout=5000
+```
+
+### Test Data Management
+- Create reusable test data factories
+- Use builders for complex test objects
+- Consider using `@ParameterizedTest` for testing multiple scenarios
+- Use meaningful test data that tests both normal and edge cases
+- Avoid hardcoding test data when possible
+
+### Continuous Integration
+- All tests must pass before merging code
+- Configure test coverage requirements (minimum 80%)
+- Generate and archive test reports
+- Fail builds that don't meet testing standards
+- Run integration tests in a separate phase
+
+### Documentation
+- Document non-obvious test setup
+- Document test assumptions
+- Comment test scenarios for complex business rules
+- Update test documentation when business rules change
+
+### Testing Anti-Patterns to Avoid
+- Don't test what you don't own (framework code)
+- Avoid test interdependencies
+- Don't write tests that depend on execution order
+- Avoid redundant assertions
+- Don't use `Thread.sleep()` in tests; use awaitility or similar tools
+- Avoid excessive mocking that reduces test value
+- Don't test trivial code (getters/setters)
+- Avoid testing implementation details; focus on behavior
+
+### Maintainability
+- Keep tests simple and readable
+- Follow the same code quality standards as production code
+- Refactor tests when production code changes
+- Remove obsolete tests
+- Use meaningful assertion messages
+
+
+
+
+## Code Quality and Static Analysis
+
+### Checkstyle Configuration
+
+The project uses Google Checkstyle to enforce code quality and consistency. The Checkstyle configuration enforces the following rules:
+
+#### General Rules
+- UTF-8 character encoding
+- Maximum line length: 120 characters
+- Maximum file length: 500 lines
+- No tab characters (use spaces)
+- New line required at end of file
+
+#### Documentation Rules
+- Javadoc required for methods, types, and variables
+- Proper Javadoc style must be maintained
+
+#### Naming Conventions
+- Constants: `UPPER_SNAKE_CASE`
+- Local variables: `camelCase`
+- Member variables: `camelCase`
+- Method names: `camelCase`
+- Package names: lowercase, dot-separated
+- Parameters: `camelCase` format (starting with lowercase letter)
+- Type names: `PascalCase`
+
+#### Import Rules
+- No wildcard imports (`import package.*`)
+- No illegal imports
+- No redundant imports
+- No unused imports
+
+#### Size and Complexity Limits
+- Method length: maximum 50 lines
+- Parameter number: reasonable limits enforced
+
+#### Whitespace Rules
+- Consistent spacing around operators
+- Proper indentation (4 spaces)
+- Proper line wrapping (8-space indentation)
+- No whitespace after certain tokens
+- Required whitespace in specific locations
+
+#### Code Block Rules
+- Avoid nested blocks
+- No empty blocks
+- Brace placement (left brace at end of line)
+- Braces required for all control statements
+
+#### Common Coding Practices
+- No empty statements
+- Equals and hashCode must be implemented together
+- No inner assignments
+- No magic numbers (use constants)
+- No missing switch default case
+- No multiple variable declarations in one statement
+- Simplify boolean expressions and returns
+
+#### Class Design
+- Design for extension
+- Final classes when appropriate
+- Hide utility class constructors
+- Interface should define types
+- Proper visibility modifiers
+
+#### Member Ordering
+- Static members before instance members
+
+#### Gradle Integration
+
+Add the following to your `build.gradle` file:
+
+```groovy
+plugins {
+    id 'checkstyle'
+}
+
+checkstyle {
+    toolVersion = '10.3.3'
+    configFile = file("${rootDir}/config/checkstyle/checkstyle.xml")
+    maxWarnings = 0
+}
+
+tasks.withType(Checkstyle) {
+    reports {
+        xml.required = false
+        html.required = true
+    }
+}
+```
+
+Place the checkstyle.xml configuration file in `config/checkstyle/checkstyle.xml`.
+
+Run Checkstyle with:
+
+```bash
+./gradlew checkstyleMain checkstyleTest
+```
+
+# Spring Boot JPA Mapping Best Practices
+
+## Introduction
+Spring Boot and JPA (Java Persistence API) provide a powerful combination for mapping Java objects to relational database tables. Following best practices ensures your application remains maintainable, performs well, and avoids common pitfalls.
+
+## Database Table Naming Conventions
+
+### Meaningful and Descriptive Names
+- Table names should clearly indicate the content or purpose of the table
+- Avoid overly generic names like `Table1`, `Data`, `Info`, or `Items`
+- Example: Instead of `Recs`, use `CustomerRecords`; instead of `Stuff`, use `ProductInventory`
+
+### Singular vs. Plural Naming
+There are valid arguments for both approaches:
+- **Plural (Recommended by many)**: Tables represent collections of entities, which feels natural when querying (`SELECT * FROM Users`)
+    - Examples: `Users`, `Products`, `Orders`, `OrderDetails`
+- **Singular**: Tables represent the definition of a single entity, which aligns with object-oriented mapping
+    - Examples: `User`, `Product`, `Order`, `OrderDetail`
+
+Recommendation: Choose one approach and apply it consistently across all tables.
+
+### Case Convention
+- **snake_case (Recommended)**: All lowercase with underscores separating words
+    - Examples: `customer_orders`, `product_categories`, `user_profiles`
+    - Avoids case sensitivity issues across different database systems
+- **PascalCase (Alternative)**: Each word starts with a capital letter
+    - Examples: `CustomerOrders`, `ProductCategories`, `UserProfiles`
+    - Common in SQL Server environments
+
+Recommendation: Choose `snake_case` or `PascalCase` and use it consistently.
+
+### Avoid Reserved Words
+- Do not use SQL keywords as table names (e.g., `Order`, `User`, `Group`, `Select`)
+- If necessary, add a suffix or prefix (e.g., `UserAccounts`, `OrderData`)
+
+### Junction Tables (Many-to-Many)
+- Name them by combining the names of the two tables they link
+- Examples: `users_roles`, `products_categories`, `doctors_patients`
+
+### Prefixes and Suffixes
+- Generally avoid generic prefixes like `tbl_` or `t_`
+- Consider prefixes for grouping related tables if not using schemas (e.g., `auth_users`, `sales_orders`)
+- Consider suffixes for different object types (e.g., `_view` for views)
+
+### Abbreviations
+- Use abbreviations sparingly and only when widely understood (e.g., `id`, `qty`, `url`)
+- Be consistent with abbreviations throughout the schema
+- Prefer clarity over brevity
+
+## Entity Best Practices
+
+### Use @Entity and @Table Properly
+```java
+@Entity
+@Table(name = "customers", 
+       indexes = {@Index(name = "idx_customer_email", columnList = "email")},
+       uniqueConstraints = {@UniqueConstraint(name = "uk_customer_email", 
+                                             columnNames = {"email"})})
+public class Customer {
+    // Entity fields and methods
+}
+```
+
+### ID Generation Strategy
+```java
+@Id
+@GeneratedValue(strategy = GenerationType.IDENTITY)
+private Long id;
+```
+
+### Use Proper Column Mappings
+```java
+@Column(name = "first_name", length = 50, nullable = false)
+private String firstName;
+
+@Column(name = "creation_date", updatable = false)
+private LocalDateTime creationDate;
+
+@Column(name = "active", columnDefinition = "boolean default true")
+private boolean active;
+```
+
+### Use Data Types Appropriately
+```java
+// For large text content
+@Lob
+@Column(name = "description", columnDefinition = "TEXT")
+private String description;
+
+// For enums
+@Enumerated(EnumType.STRING)
+@Column(name = "status", nullable = false)
+private CustomerStatus status;
+
+// For date/time
+@Column(name = "birth_date")
+private LocalDate birthDate;
+
+@Column(name = "last_login")
+private LocalDateTime lastLogin;
+```
+
+## Relationship Mapping Best Practices
+
+### One-to-Many Relationship
+```java
+// In Parent class
+@OneToMany(mappedBy = "customer", cascade = CascadeType.ALL, orphanRemoval = true)
+private Set<Order> orders = new HashSet<>();
+
+// In Child class
+@ManyToOne(fetch = FetchType.LAZY)
+@JoinColumn(name = "customer_id", nullable = false)
+private Customer customer;
+```
+
+### Many-to-Many Relationship
+```java
+// Using a join table
+@ManyToMany
+@JoinTable(
+    name = "product_category",
+    joinColumns = @JoinColumn(name = "product_id"),
+    inverseJoinColumns = @JoinColumn(name = "category_id")
+)
+private Set<Category> categories = new HashSet<>();
+```
+
+### One-to-One Relationship
+```java
+// In Parent class
+@OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+private UserProfile profile;
+
+// In Child class
+@OneToOne(fetch = FetchType.LAZY)
+@JoinColumn(name = "user_id")
+private User user;
+```
+
+## Fetching Strategies
+
+### Use Lazy Loading for Most Relationships
+```java
+@ManyToOne(fetch = FetchType.LAZY)
+@JoinColumn(name = "department_id")
+private Department department;
+```
+
+### Use Eager Loading Sparingly
+```java
+// Only use EAGER when the related entity is always needed
+@OneToOne(fetch = FetchType.EAGER)
+@JoinColumn(name = "address_id")
+private Address address;
+```
+
+## Optimistic Locking
+
+```java
+@Version
+private Long version;
+```
+
+## Auditing
+
+```java
+@EntityListeners(AuditingEntityListener.class)
+@MappedSuperclass
+public abstract class Auditable {
+    
+    @CreatedBy
+    @Column(name = "created_by", updatable = false)
+    private String createdBy;
+    
+    @CreatedDate
+    @Column(name = "created_date", updatable = false)
+    private LocalDateTime createdDate;
+    
+    @LastModifiedBy
+    @Column(name = "last_modified_by")
+    private String lastModifiedBy;
+    
+    @LastModifiedDate
+    @Column(name = "last_modified_date")
+    private LocalDateTime lastModifiedDate;
+}
+```
+
+## Inheritance Strategies
+
+### Single Table Strategy
+```java
+@Entity
+@Inheritance(strategy = InheritanceType.SINGLE_TABLE)
+@DiscriminatorColumn(name = "payment_type", discriminatorType = DiscriminatorType.STRING)
+public abstract class Payment {
+    // Common fields
+}
+
+@Entity
+@DiscriminatorValue("CREDIT_CARD")
+public class CreditCardPayment extends Payment {
+    // Credit card specific fields
+}
+```
+
+### Joined Table Strategy
+```java
+@Entity
+@Inheritance(strategy = InheritanceType.JOINED)
+public abstract class Vehicle {
+    // Common fields
+}
+
+@Entity
+@Table(name = "cars")
+public class Car extends Vehicle {
+    // Car specific fields
+}
+```
+
+## Repository Best Practices
+
+### Use Spring Data JPA Repositories
+```java
+public interface CustomerRepository extends JpaRepository<Customer, Long> {
+    
+    // Custom finder methods
+    Optional<Customer> findByEmail(String email);
+    
+    List<Customer> findByLastNameStartsWithIgnoreCase(String lastNamePrefix);
+    
+    // Custom query methods
+    @Query("SELECT c FROM Customer c WHERE c.status = :status AND c.type = :type")
+    List<Customer> findActiveBusinessCustomers(
+            @Param("status") CustomerStatus status, 
+            @Param("type") CustomerType type);
+    
+    // Native query when needed
+    @Query(value = "SELECT * FROM customers WHERE city = :city", nativeQuery = true)
+    List<Customer> findByCity(@Param("city") String city);
+}
+```
+
+## Performance Considerations
+
+### Use DTOs for Specific Views
+```java
+public interface CustomerSummary {
+    Long getId();
+    String getFullName();
+    String getEmail();
+}
+
+public interface CustomerRepository extends JpaRepository<Customer, Long> {
+    
+    @Query("SELECT c.id as id, CONCAT(c.firstName, ' ', c.lastName) as fullName, c.email as email " +
+           "FROM Customer c WHERE c.active = true")
+    List<CustomerSummary> findAllActiveSummaries();
+}
+```
+
+### Use Pagination for Large Result Sets
+```java
+public interface ProductRepository extends JpaRepository<Product, Long> {
+    
+    Page<Product> findByCategoryId(Long categoryId, Pageable pageable);
+}
+
+// In service layer
+public Page<Product> getProductsByCategory(Long categoryId, int page, int size) {
+    return productRepository.findByCategoryId(categoryId, 
+                                             PageRequest.of(page, size, 
+                                                          Sort.by("name").ascending()));
+}
+```
+
+### Use @QueryHints for Read-Only Operations
+```java
+@QueryHints(value = { @QueryHint(name = "org.hibernate.readOnly", value = "true") })
+List<Product> findAllByCategory(String category);
+```
+
+## Validation and Constraints
+
+```java
+@Entity
+public class User {
+    
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+    
+    @NotBlank
+    @Size(min = 2, max = 50)
+    @Column(name = "username", nullable = false, unique = true)
+    private String username;
+    
+    @Email
+    @NotNull
+    @Column(name = "email", nullable = false, unique = true)
+    private String email;
+    
+    @Pattern(regexp = "^\\+[1-9]\\d{1,14}$")
+    @Column(name = "phone")
+    private String phone;
+}
+```
+
+## Configuration Best Practices
+
+### Use application.properties/yml for JPA Configuration
+```properties
+# DataSource configuration
+spring.datasource.url=jdbc:mysql://localhost:3306/mydb
+spring.datasource.username=user
+spring.datasource.password=password
+spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver
+
+# JPA configuration
+spring.jpa.hibernate.ddl-auto=validate
+spring.jpa.show-sql=true
+spring.jpa.properties.hibernate.format_sql=true
+spring.jpa.open-in-view=false
+
+# Connection pool configuration
+spring.datasource.hikari.maximum-pool-size=10
+spring.datasource.hikari.minimum-idle=5
+spring.datasource.hikari.idle-timeout=300000
+```
+
+### Use Flyway or Liquibase for Database Migrations
+```properties
+# Flyway configuration
+spring.flyway.enabled=true
+spring.flyway.locations=classpath:db/migration
+spring.flyway.baseline-on-migrate=true
+```
+
+## Transaction Management
+
+```java
+@Service
+@Transactional(readOnly = true)
+public class CustomerService {
+    
+    private final CustomerRepository customerRepository;
+    
+    public CustomerService(CustomerRepository customerRepository) {
+        this.customerRepository = customerRepository;
+    }
+    
+    public Customer findById(Long id) {
+        return customerRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Customer not found"));
+    }
+    
+    @Transactional
+    public Customer save(Customer customer) {
+        return customerRepository.save(customer);
+    }
+    
+    @Transactional
+    public void delete(Long id) {
+        customerRepository.deleteById(id);
+    }
+}
+```
+
+## Testing JPA Repositories
+
+```java
+@DataJpaTest
+@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
+public class CustomerRepositoryTest {
+    
+    @Autowired
+    private CustomerRepository customerRepository;
+    
+    @Test
+    public void shouldSaveCustomer() {
+        // Given
+        Customer customer = new Customer();
+        customer.setFirstName("John");
+        customer.setLastName("Doe");
+        customer.setEmail("john.doe@example.com");
+        
+        // When
+        Customer savedCustomer = customerRepository.save(customer);
+        
+        // Then
+        assertThat(savedCustomer.getId()).isNotNull();
+        assertThat(savedCustomer.getFirstName()).isEqualTo("John");
+    }
+    
+    @Test
+    public void shouldFindByEmail() {
+        // Given
+        Customer customer = new Customer();
+        customer.setFirstName("Jane");
+        customer.setLastName("Doe");
+        customer.setEmail("jane.doe@example.com");
+        customerRepository.save(customer);
+        
+        // When
+        Optional<Customer> result = customerRepository.findByEmail("jane.doe@example.com");
+        
+        // Then
+        assertThat(result).isPresent();
+        assertThat(result.get().getFirstName()).isEqualTo("Jane");
+    }
+}
+```
+
+## Common Anti-patterns to Avoid
+
+1. N+1 Query Problem: Using lazy loading without proper fetch joins
+2. Eager loading everything: Avoid FetchType.EAGER for all associations
+3. Bidirectional relationship management errors: Always update both sides
+4. Not using proper cascade types: Consider what should happen to children
+5. Entity exposure in REST APIs: Use DTOs instead
+6. Large transaction scope: Keep transactions as short as possible
+7. Using field-based access with business logic in getters/setters
+8. Not handling LazyInitializationException properly
+9. Using @OneToMany without a Set or enforcing equality
+10. Storing large objects in the database without proper handling
+
+By following these best practices, you'll create a more maintainable and performant JPA implementation in your Spring Boot applications.
