@@ -1,7 +1,8 @@
-package app.quantun.springaimcp.service;
+package app.quantun.springaimcp.service.impl;
 
-import app.quantun.springaimcp.model.contract.request.Answer;
+import app.quantun.springaimcp.model.contract.response.Answer;
 import app.quantun.springaimcp.model.contract.request.Question;
+import app.quantun.springaimcp.service.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
@@ -24,6 +25,11 @@ import java.util.Map;
 @Slf4j
 public class AgentServiceImpl implements AgentService {
 
+
+    private final CategoryService categoryService;
+    private final ProductService productService;
+    private final UserService userService;
+    private final AgentUtil agentUtil;
 
     @Autowired
     @Qualifier("anthropicChatClient")
@@ -67,7 +73,12 @@ public class AgentServiceImpl implements AgentService {
 
         Prompt userPrompt = userPromptTemplate.create(Map.of("question", questionJson, "format", format.getFormat()));
 
-        String aiResponse = anthropicChatClient.prompt(systemPrompt).advisors(new SimpleLoggerAdvisor()).user(userPrompt.getContents()).call().content();
+        String aiResponse =
+                anthropicChatClient.prompt(systemPrompt)
+                        .advisors(new SimpleLoggerAdvisor())
+                        .user(userPrompt.getContents())
+                        .tools( this.agentUtil)
+                        .call().content();
 
         if (aiResponse == null)
         {

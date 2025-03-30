@@ -44,7 +44,7 @@ dependencies {
     developmentOnly 'org.springframework.boot:spring-boot-devtools'
     annotationProcessor 'org.projectlombok:lombok'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
-    runtimeOnly 'com.h2database:h2'
+    implementation 'com.h2database:h2'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 
 //swagger
@@ -56,6 +56,22 @@ dependencies {
     implementation 'io.swagger.core.v3:swagger-annotations:2.2.28'
 
     implementation 'javax.validation:validation-api:2.0.1.Final'
+
+    // JUnit dependencies
+    testImplementation 'org.junit.jupiter:junit-jupiter-engine:5.11.4'
+    testImplementation 'org.junit.platform:junit-platform-suite-api:1.11.4'
+    testImplementation 'org.junit.platform:junit-platform-suite-engine:1.11.4'
+
+    // https://mvnrepository.com/artifact/jakarta.validation/jakarta.validation-api
+    implementation group: 'jakarta.validation', name: 'jakarta.validation-api', version: '3.1.1'
+
+    // Add these for AOT support with Mockito
+    testImplementation 'org.mockito:mockito-core'
+    testImplementation 'net.bytebuddy:byte-buddy'
+    testImplementation 'org.springframework:spring-test'
+
+    // https://mvnrepository.com/artifact/jakarta.json/jakarta.json-api
+    implementation 'jakarta.json:jakarta.json-api:2.1.3'
 
 }
 

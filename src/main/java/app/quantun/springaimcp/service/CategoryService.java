@@ -1,10 +1,16 @@
 package app.quantun.springaimcp.service;
 
 import app.quantun.springaimcp.model.entity.Category;
+import org.springframework.ai.tool.annotation.Tool;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import java.util.List;
+
 public interface CategoryService {
+
+
+    List<Category> findAllCategories();
 
     Page<Category> findAllCategories(Pageable pageable);
 
