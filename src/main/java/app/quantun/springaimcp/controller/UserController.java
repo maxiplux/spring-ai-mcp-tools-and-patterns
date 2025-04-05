@@ -5,9 +5,9 @@ import app.quantun.springaimcp.model.entity.User;
 import app.quantun.springaimcp.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -37,8 +37,8 @@ public class UserController {
     @GetMapping("/{id}")
     @Operation(summary = "Get user by ID", description = "Returns a user by their ID")
     @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "User found"),
-        @ApiResponse(responseCode = "404", description = "User not found")
+            @ApiResponse(responseCode = "200", description = "User found"),
+            @ApiResponse(responseCode = "404", description = "User not found")
     })
     public ResponseEntity<User> getUserById(
             @Parameter(description = "User ID", required = true) @PathVariable Long id) {
@@ -52,8 +52,8 @@ public class UserController {
     @GetMapping("/username/{username}")
     @Operation(summary = "Get user by username", description = "Returns a user by their username")
     @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "User found"),
-        @ApiResponse(responseCode = "404", description = "User not found")
+            @ApiResponse(responseCode = "200", description = "User found"),
+            @ApiResponse(responseCode = "404", description = "User not found")
     })
     public ResponseEntity<User> getUserByUsername(
             @Parameter(description = "Username", required = true) @PathVariable String username) {
@@ -67,8 +67,8 @@ public class UserController {
     @GetMapping("/email/{email}")
     @Operation(summary = "Get user by email", description = "Returns a user by their email address")
     @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "User found"),
-        @ApiResponse(responseCode = "404", description = "User not found")
+            @ApiResponse(responseCode = "200", description = "User found"),
+            @ApiResponse(responseCode = "404", description = "User not found")
     })
     public ResponseEntity<User> getUserByEmail(
             @Parameter(description = "Email address", required = true) @PathVariable String email) {
@@ -90,8 +90,8 @@ public class UserController {
     @PostMapping("/register")
     @Operation(summary = "Register a new user", description = "Creates a new user account")
     @ApiResponses({
-        @ApiResponse(responseCode = "201", description = "User registered successfully"),
-        @ApiResponse(responseCode = "400", description = "Invalid user data or username/email already exists")
+            @ApiResponse(responseCode = "201", description = "User registered successfully"),
+            @ApiResponse(responseCode = "400", description = "Invalid user data or username/email already exists")
     })
     public ResponseEntity<User> registerUser(
             @Parameter(description = "User registration details", required = true) @Valid @RequestBody User user) {
@@ -105,8 +105,8 @@ public class UserController {
     @PutMapping("/{id}")
     @Operation(summary = "Update a user", description = "Updates an existing user")
     @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "User updated successfully"),
-        @ApiResponse(responseCode = "404", description = "User not found")
+            @ApiResponse(responseCode = "200", description = "User updated successfully"),
+            @ApiResponse(responseCode = "404", description = "User not found")
     })
     public ResponseEntity<User> updateUser(
             @Parameter(description = "User ID", required = true) @PathVariable Long id,
@@ -121,8 +121,8 @@ public class UserController {
     @DeleteMapping("/{id}")
     @Operation(summary = "Delete a user", description = "Deletes a user by their ID")
     @ApiResponses({
-        @ApiResponse(responseCode = "204", description = "User deleted successfully"),
-        @ApiResponse(responseCode = "404", description = "User not found")
+            @ApiResponse(responseCode = "204", description = "User deleted successfully"),
+            @ApiResponse(responseCode = "404", description = "User not found")
     })
     public ResponseEntity<Void> deleteUser(
             @Parameter(description = "User ID", required = true) @PathVariable Long id) {
@@ -137,8 +137,8 @@ public class UserController {
     @PutMapping("/{id}/roles")
     @Operation(summary = "Add role to user", description = "Adds a role to an existing user")
     @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "Role added successfully"),
-        @ApiResponse(responseCode = "404", description = "User not found")
+            @ApiResponse(responseCode = "200", description = "Role added successfully"),
+            @ApiResponse(responseCode = "404", description = "User not found")
     })
     public ResponseEntity<User> addRoleToUser(
             @Parameter(description = "User ID", required = true) @PathVariable Long id,
@@ -153,8 +153,8 @@ public class UserController {
     @DeleteMapping("/{id}/roles")
     @Operation(summary = "Remove role from user", description = "Removes a role from an existing user")
     @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "Role removed successfully"),
-        @ApiResponse(responseCode = "404", description = "User not found")
+            @ApiResponse(responseCode = "200", description = "Role removed successfully"),
+            @ApiResponse(responseCode = "404", description = "User not found")
     })
     public ResponseEntity<User> removeRoleFromUser(
             @Parameter(description = "User ID", required = true) @PathVariable Long id,

@@ -1,7 +1,7 @@
 package app.quantun.springaimcp.service.impl;
 
-import app.quantun.springaimcp.model.contract.response.Answer;
 import app.quantun.springaimcp.model.contract.request.Question;
+import app.quantun.springaimcp.model.contract.response.Answer;
 import app.quantun.springaimcp.service.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
@@ -26,7 +26,7 @@ import java.util.Map;
 public class AgentServiceImpl implements AgentService {
 
 
-    private final CategoryService categoryService;
+    private final AgentCategoryService agentCategoryService;
     private final ProductService productService;
     private final UserService userService;
     private final AgentUtil agentUtil;
@@ -47,17 +47,12 @@ public class AgentServiceImpl implements AgentService {
     private Resource userSummaryBookTemplate;
 
 
-
-
-
-
     @SneakyThrows
     @Override
     public Answer getAnswer(Question question) {
-        if (question == null || question.getText() == null)
-        {
+        if (question == null || question.getText() == null) {
             log.error("Question or its text cannot be null. {}", question);
-            throw new IllegalArgumentException( "Question or its text cannot be null.");
+            throw new IllegalArgumentException("Question or its text cannot be null.");
         }
         ObjectMapper objectMapper = new ObjectMapper();
 
@@ -77,13 +72,12 @@ public class AgentServiceImpl implements AgentService {
                 anthropicChatClient.prompt(systemPrompt)
                         .advisors(new SimpleLoggerAdvisor())
                         .user(userPrompt.getContents())
-                        .tools( this.agentUtil)
+                        .tools(this.productService, this.agentCategoryService, this.userService)
                         .call().content();
 
-        if (aiResponse == null)
-        {
-                    log.error("AI response is null for question: {}", questionJson);
-                    throw new IllegalStateException("AI response cannot be null.");
+        if (aiResponse == null) {
+            log.error("AI response is null for question: {}", questionJson);
+            throw new IllegalStateException("AI response cannot be null.");
         }
         return format.convert(aiResponse);
 

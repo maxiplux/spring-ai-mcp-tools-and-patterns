@@ -12,5 +12,8 @@ import org.junit.platform.suite.api.Suite;
 public class
 
 AllTestsRunner {
+    //Sorry these test are not working .
+    // They were written to work with WebMvc, and now we have webflux
+    // Maybe in the future I will write a new version of these test that works
     // This class serves as a test suite runner
 }

@@ -11,8 +11,7 @@ import org.springframework.context.annotation.Primary;
 public class AiConfig {
 
     @Bean
-    ChatClient anthropicChatClient(AnthropicChatModel chatModel)
-    {
+    ChatClient anthropicChatClient(AnthropicChatModel chatModel) {
         return ChatClient.create(chatModel);
     }
 

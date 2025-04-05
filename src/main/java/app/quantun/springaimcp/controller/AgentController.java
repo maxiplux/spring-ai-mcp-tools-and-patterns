@@ -1,7 +1,7 @@
 package app.quantun.springaimcp.controller;
 
-import app.quantun.springaimcp.model.contract.response.Answer;
 import app.quantun.springaimcp.model.contract.request.Question;
+import app.quantun.springaimcp.model.contract.response.Answer;
 import app.quantun.springaimcp.service.AgentService;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -16,11 +16,11 @@ import org.springframework.web.bind.annotation.RestController;
 
 public class AgentController {
     private final AgentService agentService;
+
     @PostMapping("/question")
     public Answer getAnswer(Question question) {
         return agentService.getAnswer(question);
     }
-
 
 
 }

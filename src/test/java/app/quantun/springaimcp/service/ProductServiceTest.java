@@ -34,7 +34,7 @@ class ProductServiceTest {
     private ProductRepository productRepository;
 
     @Mock
-    private CategoryService categoryService;
+    private AgentCategoryService agentCategoryService;
 
     @InjectMocks
     private ProductServiceImpl productService;
@@ -140,7 +140,7 @@ class ProductServiceTest {
     @Test
     void should_ReturnProductsByCategory_WhenFindProductsByCategory() {
         // Arrange
-        when(categoryService.existsById(1L)).thenReturn(true);
+        when(agentCategoryService.existsById(1L)).thenReturn(true);
         when(productRepository.findByCategoryId(1L, pageable)).thenReturn(productPage);
 
         // Act
@@ -149,20 +149,20 @@ class ProductServiceTest {
         // Assert
         assertNotNull(result);
         assertEquals(1, result.getTotalElements());
-        verify(categoryService).existsById(1L);
+        verify(agentCategoryService).existsById(1L);
         verify(productRepository).findByCategoryId(1L, pageable);
     }
 
     @Test
     void should_ThrowException_WhenFindProductsByCategoryInvalidCategory() {
         // Arrange
-        when(categoryService.existsById(99L)).thenReturn(false);
+        when(agentCategoryService.existsById(99L)).thenReturn(false);
 
         // Act & Assert
         assertThrows(NoSuchElementException.class, () -> {
             productService.findProductsByCategory(99L, pageable);
         });
-        verify(categoryService).existsById(99L);
+        verify(agentCategoryService).existsById(99L);
         verifyNoInteractions(productRepository);
     }
 
@@ -212,7 +212,7 @@ class ProductServiceTest {
     @Test
     void should_SaveProduct_WhenSaveProduct() {
         // Arrange
-        when(categoryService.findCategoryById(1L)).thenReturn(category);
+        when(agentCategoryService.findCategoryById(1L)).thenReturn(category);
         when(productRepository.save(any(Product.class))).thenReturn(product);
 
         // Act
@@ -221,7 +221,7 @@ class ProductServiceTest {
         // Assert
         assertNotNull(result);
         assertEquals("Test Product", result.getName());
-        verify(categoryService).findCategoryById(1L);
+        verify(agentCategoryService).findCategoryById(1L);
         verify(productRepository).save(product);
     }
 
@@ -235,7 +235,7 @@ class ProductServiceTest {
         updatedProduct.setCategory(category);
 
         when(productRepository.findById(1L)).thenReturn(Optional.of(product));
-        when(categoryService.findCategoryById(1L)).thenReturn(category);
+        when(agentCategoryService.findCategoryById(1L)).thenReturn(category);
         when(productRepository.save(any(Product.class))).thenReturn(product);
 
         // Act
@@ -245,7 +245,7 @@ class ProductServiceTest {
         assertNotNull(result);
         // Note: In a real scenario, we'd verify the product was updated with new values
         verify(productRepository).findById(1L);
-        verify(categoryService).findCategoryById(1L);
+        verify(agentCategoryService).findCategoryById(1L);
         verify(productRepository).save(any(Product.class));
     }
 
@@ -260,7 +260,7 @@ class ProductServiceTest {
         });
         verify(productRepository).findById(99L);
         verifyNoMoreInteractions(productRepository);
-        verifyNoInteractions(categoryService);
+        verifyNoInteractions(agentCategoryService);
     }
 
     @Test

@@ -2,27 +2,25 @@ package app.quantun.springaimcp.service.impl;
 
 import app.quantun.springaimcp.model.entity.Product;
 import app.quantun.springaimcp.repository.ProductRepository;
-import app.quantun.springaimcp.service.CategoryService;
+import app.quantun.springaimcp.service.AgentCategoryService;
 import app.quantun.springaimcp.service.ProductService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.ai.tool.annotation.Tool;
 import org.springframework.ai.tool.annotation.ToolParam;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.NoSuchElementException;
 
 @Service
-@Transactional
+//@Transactional ( Because MCP SERVER) ;(
 @RequiredArgsConstructor
 public class ProductServiceImpl implements ProductService {
 
     private final ProductRepository productRepository;
-    private final CategoryService categoryService;
+    private final AgentCategoryService agentCategoryService;
 
     @Override
     @Tool(description = "Find all products with pagination")
@@ -47,10 +45,10 @@ public class ProductServiceImpl implements ProductService {
     @Override
     @Tool(description = "Find products by category ID with pagination")
     public Page<Product> findProductsByCategory(
-            @ToolParam(description = "Category ID to filter by") Long categoryId, 
+            @ToolParam(description = "Category ID to filter by") Long categoryId,
             @ToolParam(description = "Pagination settings") Pageable pageable) {
         // Verify category exists
-        if (!categoryService.existsById(categoryId)) {
+        if (!agentCategoryService.existsById(categoryId)) {
             throw new NoSuchElementException("Category not found with id: " + categoryId);
         }
         return productRepository.findByCategoryId(categoryId, pageable);
@@ -59,8 +57,8 @@ public class ProductServiceImpl implements ProductService {
     @Override
     @Tool(description = "Find products within a specific price range")
     public Page<Product> findProductsByPriceRange(
-            @ToolParam(description = "Minimum price (inclusive)") BigDecimal minPrice, 
-            @ToolParam(description = "Maximum price (inclusive)") BigDecimal maxPrice, 
+            @ToolParam(description = "Minimum price (inclusive)") BigDecimal minPrice,
+            @ToolParam(description = "Maximum price (inclusive)") BigDecimal maxPrice,
             @ToolParam(description = "Pagination settings") Pageable pageable) {
         if (minPrice.compareTo(maxPrice) > 0) {
             throw new IllegalArgumentException("Min price cannot be greater than max price");
@@ -71,7 +69,7 @@ public class ProductServiceImpl implements ProductService {
     @Override
     @Tool(description = "Search for products by name (case-insensitive)")
     public Page<Product> findProductsByNameContaining(
-            @ToolParam(description = "Search keyword for product name") String keyword, 
+            @ToolParam(description = "Search keyword for product name") String keyword,
             @ToolParam(description = "Pagination settings") Pageable pageable) {
         return productRepository.findByNameContainingIgnoreCase(keyword, pageable);
     }
@@ -82,7 +80,7 @@ public class ProductServiceImpl implements ProductService {
             @ToolParam(description = "Product object with details to save") Product product) {
         // Verify category exists if provided
         if (product.getCategory() != null && product.getCategory().getId() != null) {
-            categoryService.findCategoryById(product.getCategory().getId());
+            agentCategoryService.findCategoryById(product.getCategory().getId());
         }
         return productRepository.save(product);
     }
@@ -90,7 +88,7 @@ public class ProductServiceImpl implements ProductService {
     @Override
     @Tool(description = "Update an existing product")
     public Product updateProduct(
-            @ToolParam(description = "ID of the product to update") Long id, 
+            @ToolParam(description = "ID of the product to update") Long id,
             @ToolParam(description = "Product object with updated details") Product productDetails) {
         Product product = findProductById(id);
 
@@ -100,7 +98,7 @@ public class ProductServiceImpl implements ProductService {
 
         // Only update category if provided
         if (productDetails.getCategory() != null && productDetails.getCategory().getId() != null) {
-            categoryService.findCategoryById(productDetails.getCategory().getId());
+            agentCategoryService.findCategoryById(productDetails.getCategory().getId());
             product.setCategory(productDetails.getCategory());
         }
 

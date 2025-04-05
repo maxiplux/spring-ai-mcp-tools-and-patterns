@@ -9,14 +9,12 @@ import org.springframework.ai.tool.annotation.Tool;
 import org.springframework.ai.tool.annotation.ToolParam;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.NoSuchElementException;
 
 @Service
-@Transactional
+//@Transactional ( Because MCP SERVER) ;(
 @RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
 
@@ -44,7 +42,6 @@ public class UserServiceImpl implements UserService {
     }
 
 
-
     @Override
     @Tool(description = "Find user by username")
     public User findUserByUsername(@ToolParam(description = "Username") String username) {
@@ -54,7 +51,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Tool(description = "Find user by role")
-    public Page<User> findUsersByRole(@ToolParam(description = "Role Name")  Role role, @ToolParam(description = "Pagination settings pageable")  Pageable pageable) {
+    public Page<User> findUsersByRole(@ToolParam(description = "Role Name") Role role, @ToolParam(description = "Pagination settings pageable") Pageable pageable) {
         return userRepository.findByRole(role, pageable);
     }
 
@@ -79,35 +76,34 @@ public class UserServiceImpl implements UserService {
     }
 
 
-
     @Override
     @Tool(description = "Update an existing user")
     public User updateUser(
-            @ToolParam(description = "ID of the user to update") Long id, 
+            @ToolParam(description = "ID of the user to update") Long id,
             @ToolParam(description = "User object with updated details") User userDetails) {
         User user = findUserById(id);
-        
+
         // Check email uniqueness if changed
-        if (!user.getEmail().equals(userDetails.getEmail()) && 
-            userRepository.findByEmail(userDetails.getEmail()).isPresent()) {
+        if (!user.getEmail().equals(userDetails.getEmail()) &&
+                userRepository.findByEmail(userDetails.getEmail()).isPresent()) {
             throw new IllegalArgumentException("Email already in use: " + userDetails.getEmail());
         }
-        
+
         // Check username uniqueness if changed
-        if (!user.getUsername().equals(userDetails.getUsername()) && 
-            userRepository.findByUsername(userDetails.getUsername()).isPresent()) {
+        if (!user.getUsername().equals(userDetails.getUsername()) &&
+                userRepository.findByUsername(userDetails.getUsername()).isPresent()) {
             throw new IllegalArgumentException("Username already taken: " + userDetails.getUsername());
         }
-        
+
 
         user.setEmail(userDetails.getEmail());
         user.setUsername(userDetails.getUsername());
-        
+
         // Only update password if provided
         if (userDetails.getPassword() != null && !userDetails.getPassword().isEmpty()) {
             user.setPassword(userDetails.getPassword());
         }
-        
+
         return userRepository.save(user);
     }
 
@@ -150,18 +146,18 @@ public class UserServiceImpl implements UserService {
         return userRepository.save(user);
     }
 
-    @Tool(description = "Check if a user exists by ID")
+    @Tool(description = "Check if a user exists by ID", name = "checkUserExistsById")
     @Override
     public boolean existsById(@ToolParam(description = "ID of the user to check") Long id) {
         return userRepository.existsById(id);
     }
-    
+
     @Tool(description = "Check if an email is already registered")
     @Override
     public boolean existsByEmail(@ToolParam(description = "Email to check") String email) {
         return userRepository.findByEmail(email).isPresent();
     }
-    
+
     @Override
     @Tool(description = "Check if a username is already taken")
     public boolean existsByUsername(@ToolParam(description = "Username to check") String username) {

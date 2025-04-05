@@ -4,9 +4,9 @@ import app.quantun.springaimcp.model.entity.Product;
 import app.quantun.springaimcp.service.ProductService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -37,8 +37,8 @@ public class ProductController {
     @GetMapping("/{id}")
     @Operation(summary = "Get product by ID", description = "Returns a product by its ID")
     @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "Product found"),
-        @ApiResponse(responseCode = "404", description = "Product not found")
+            @ApiResponse(responseCode = "200", description = "Product found"),
+            @ApiResponse(responseCode = "404", description = "Product not found")
     })
     public ResponseEntity<Product> getProductById(
             @Parameter(description = "Product ID", required = true) @PathVariable Long id) {
@@ -52,8 +52,8 @@ public class ProductController {
     @GetMapping("/sku/{sku}")
     @Operation(summary = "Get product by SKU", description = "Returns a product by its SKU")
     @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "Product found"),
-        @ApiResponse(responseCode = "404", description = "Product not found")
+            @ApiResponse(responseCode = "200", description = "Product found"),
+            @ApiResponse(responseCode = "404", description = "Product not found")
     })
     public ResponseEntity<Product> getProductBySku(
             @Parameter(description = "Product SKU", required = true) @PathVariable String sku) {
@@ -67,8 +67,8 @@ public class ProductController {
     @GetMapping("/category/{categoryId}")
     @Operation(summary = "Get products by category", description = "Returns a paginated list of products by category ID")
     @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "Products found"),
-        @ApiResponse(responseCode = "404", description = "Category not found")
+            @ApiResponse(responseCode = "200", description = "Products found"),
+            @ApiResponse(responseCode = "404", description = "Category not found")
     })
     public ResponseEntity<Page<Product>> getProductsByCategory(
             @Parameter(description = "Category ID", required = true) @PathVariable Long categoryId,
@@ -83,8 +83,8 @@ public class ProductController {
     @GetMapping("/price-range")
     @Operation(summary = "Get products by price range", description = "Returns a paginated list of products within a price range")
     @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "Products found"),
-        @ApiResponse(responseCode = "400", description = "Invalid price range")
+            @ApiResponse(responseCode = "200", description = "Products found"),
+            @ApiResponse(responseCode = "400", description = "Invalid price range")
     })
     public ResponseEntity<Page<Product>> getProductsByPriceRange(
             @Parameter(description = "Minimum price", required = true) @RequestParam BigDecimal minPrice,
@@ -108,8 +108,8 @@ public class ProductController {
     @PostMapping
     @Operation(summary = "Create a product", description = "Creates a new product")
     @ApiResponses({
-        @ApiResponse(responseCode = "201", description = "Product created successfully"),
-        @ApiResponse(responseCode = "400", description = "Invalid product data or referenced category not found")
+            @ApiResponse(responseCode = "201", description = "Product created successfully"),
+            @ApiResponse(responseCode = "400", description = "Invalid product data or referenced category not found")
     })
     public ResponseEntity<Product> createProduct(
             @Parameter(description = "Product details", required = true) @Valid @RequestBody Product product) {
@@ -123,8 +123,8 @@ public class ProductController {
     @PutMapping("/{id}")
     @Operation(summary = "Update a product", description = "Updates an existing product")
     @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "Product updated successfully"),
-        @ApiResponse(responseCode = "404", description = "Product not found")
+            @ApiResponse(responseCode = "200", description = "Product updated successfully"),
+            @ApiResponse(responseCode = "404", description = "Product not found")
     })
     public ResponseEntity<Product> updateProduct(
             @Parameter(description = "Product ID", required = true) @PathVariable Long id,
@@ -139,8 +139,8 @@ public class ProductController {
     @DeleteMapping("/{id}")
     @Operation(summary = "Delete a product", description = "Deletes a product by its ID")
     @ApiResponses({
-        @ApiResponse(responseCode = "204", description = "Product deleted successfully"),
-        @ApiResponse(responseCode = "404", description = "Product not found")
+            @ApiResponse(responseCode = "204", description = "Product deleted successfully"),
+            @ApiResponse(responseCode = "404", description = "Product not found")
     })
     public ResponseEntity<Void> deleteProduct(
             @Parameter(description = "Product ID", required = true) @PathVariable Long id) {

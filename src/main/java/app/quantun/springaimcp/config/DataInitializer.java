@@ -4,7 +4,7 @@ import app.quantun.springaimcp.model.entity.Category;
 import app.quantun.springaimcp.model.entity.Product;
 import app.quantun.springaimcp.model.entity.Role;
 import app.quantun.springaimcp.model.entity.User;
-import app.quantun.springaimcp.service.CategoryService;
+import app.quantun.springaimcp.service.AgentCategoryService;
 import app.quantun.springaimcp.service.ProductService;
 import app.quantun.springaimcp.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,16 +18,16 @@ import java.math.BigDecimal;
 @Component
 public class DataInitializer implements CommandLineRunner {
 
-    private final CategoryService categoryService;
+    private final AgentCategoryService agentCategoryService;
     private final ProductService productService;
     private final UserService userService;
 
     @Autowired
     public DataInitializer(
-            CategoryService categoryService,
+            AgentCategoryService agentCategoryService,
             ProductService productService,
             UserService userService) {
-        this.categoryService = categoryService;
+        this.agentCategoryService = agentCategoryService;
         this.productService = productService;
         this.userService = userService;
     }
@@ -36,7 +36,7 @@ public class DataInitializer implements CommandLineRunner {
     public void run(String... args) {
         // Check if data already exists
         Pageable allRecords = PageRequest.of(0, Integer.MAX_VALUE);
-        if (categoryService.findAllCategories(allRecords).isEmpty() &&
+        if (agentCategoryService.findAllCategories(allRecords).isEmpty() &&
                 productService.findAllProducts(allRecords).isEmpty() &&
                 !userService.existsByUsername("admin")) {
             loadData();
@@ -48,17 +48,17 @@ public class DataInitializer implements CommandLineRunner {
         Category electronics = new Category();
         electronics.setName("Electronics");
         electronics.setDescription("Electronic devices and gadgets");
-        electronics = categoryService.saveCategory(electronics);
+        electronics = agentCategoryService.saveCategory(electronics);
 
         Category clothing = new Category();
         clothing.setName("Clothing");
         clothing.setDescription("Apparel and fashion items");
-        clothing = categoryService.saveCategory(clothing);
+        clothing = agentCategoryService.saveCategory(clothing);
 
         Category books = new Category();
         books.setName("Books");
         books.setDescription("Books, e-books, and publications");
-        books = categoryService.saveCategory(books);
+        books = agentCategoryService.saveCategory(books);
 
         // Create products
         Product smartphone = new Product();
