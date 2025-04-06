@@ -1,9 +1,7 @@
 package app.quantun.springaimcp.service.bot;
 
-import app.quantun.springaimcp.model.contract.request.Question;
 import app.quantun.springaimcp.service.AgentService;
 import lombok.extern.slf4j.Slf4j;
-import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -140,18 +138,23 @@ public class SecureTelegramBot extends TelegramLongPollingBot {
         } else {
             log.debug("Processing text message for user: {}", userIdentifier);
 
+            sendReply(chatId, messageId, String.format("MY FRIEND YOU SAID [{%s}]", messageText) );
+
+            /*
+
             val answer = agentService.getAnswer(Question.builder().text(messageText).build());
 
             /*switch (answer.getAnswerType()) {
                 case HTML -> sendReply(chatId, messageId, answer.getHtmlAnswer());
                 case MARKDOWN -> sendReply(chatId, messageId, answer.getMarkDownAnswer());
                 default -> log.warn("Unsupported answer type for user: {}", userIdentifier);
-            }*/
+            }
             switch (answer.getAnswerType()) {
                 case HTML -> sendReply(chatId, messageId, answer.getHtmlAnswer());
                 case MARKDOWN -> sendReply(chatId, messageId, answer.getMarkDownAnswer());
                 default -> log.warn("Unsupported answer type for user: {}", userIdentifier);
             }
+            */
 
 
         }
