@@ -65,7 +65,7 @@ public class AgentUtilImpl implements AgentUtil {
     }
 
     @Tool(description = "Get columns from a table")
-    public List<Map<String, Object>> getColumnsFromTales(@ToolParam(description = "Table name") String tableName) {
+    public List<Map<String, Object>> getColumnsFromTables(@ToolParam(description = "Table name") String tableName) {
         String sql = String.format("SELECT     COLUMN_NAME, data_type,COLUMN_DEFAULT as DEFAULT_VALUE,  ORDINAL_POSITION as POSITION FROM     INFORMATION_SCHEMA.COLUMNS WHERE     TABLE_SCHEMA = 'PUBLIC'     AND TABLE_NAME = '%s' ORDER BY     ORDINAL_POSITION;", tableName);
         return jdbcTemplate.queryForList(sql);
     }
